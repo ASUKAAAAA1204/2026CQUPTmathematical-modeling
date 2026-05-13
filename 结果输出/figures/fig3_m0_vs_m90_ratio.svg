@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<rect width="100%" height="100%" fill="white"/>
+<text x="600.0" y="28" font-size="20" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="bold">M0 与 M90/M0 散点图</text>
+<rect x="90" y="60" width="920" height="620" rx="0" fill="white" stroke="#333" stroke-width="1" opacity="1.0"/>
+<line x1="90" y1="680" x2="1010" y2="680" stroke="#333" stroke-width="1.2"/>
+<line x1="90" y1="60" x2="90" y2="680" stroke="#333" stroke-width="1.2"/>
+<line x1="90.0" y1="680" x2="90.0" y2="685" stroke="#333" stroke-width="1"/>
+<text x="90.0" y="700" font-size="10" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">1.6</text>
+<line x1="550.0" y1="680" x2="550.0" y2="685" stroke="#333" stroke-width="1"/>
+<text x="550.0" y="700" font-size="10" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">3.7</text>
+<line x1="1010.0" y1="680" x2="1010.0" y2="685" stroke="#333" stroke-width="1"/>
+<text x="1010.0" y="700" font-size="10" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">5.8</text>
+<line x1="85" y1="680.0" x2="90" y2="680.0" stroke="#333" stroke-width="1"/>
+<text x="82" y="684.0" font-size="10" text-anchor="end" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">0.00</text>
+<line x1="85" y1="370.00000000000006" x2="90" y2="370.00000000000006" stroke="#333" stroke-width="1"/>
+<text x="82" y="374.00000000000006" font-size="10" text-anchor="end" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">0.00</text>
+<line x1="85" y1="60.0" x2="90" y2="60.0" stroke="#333" stroke-width="1"/>
+<text x="82" y="64.0" font-size="10" text-anchor="end" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">0.00</text>
+<text x="550.0" y="720" font-size="12" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">第0天初值 M0</text>
+<text x="40" y="370.0" font-size="12" text-anchor="middle" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">M90/M0</text>
+<circle cx="278.2888793122894" cy="563.7130257705943" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="555.1852537779091" cy="558.6221578598769" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="450.07123090566535" cy="559.7919605853139" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="385.9805112242099" cy="562.1808945658994" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="173.26223301766174" cy="553.8878717949045" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="173.26223301766174" cy="553.8878717949045" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="126.20994597135808" cy="563.8878584306123" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="514.5551451863935" cy="557.878661314206" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="387.1819391664322" cy="562.4576039216597" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="438.5812109491399" cy="557.3020191453772" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="108.18852683802452" cy="556.6384531156342" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="564.4034827164144" cy="560.3264164282597" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="498.34679003859526" cy="562.0138657514548" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="200.32712793426813" cy="563.1685005294805" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="185.66970703915683" cy="558.283756743537" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="186.43425209329826" cy="558.546557954824" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="244.4959879192384" cy="553.8127546058454" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="350.4837765676439" cy="562.7285903601686" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="305.8780336945928" cy="560.9615491937889" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="238.2485626196828" cy="563.1473602334241" r="5" fill="#1f77b4" stroke="none" opacity="0.85"/>
+<circle cx="351.09541261095694" cy="608.9220102481078" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="182.91734484424774" cy="608.2935229519223" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="237.265576121501" cy="608.1975232118683" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="263.6969908503902" cy="613.3905099521438" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="295.6331299690977" cy="608.8650793079429" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="412.80512055237193" cy="609.9157985605432" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="204.34645050461165" cy="613.0425263375213" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="316.3413788641282" cy="612.534961055673" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="344.17081883487606" cy="607.7524447790331" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="149.77977778331797" cy="613.7435926641293" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="349.56632250267415" cy="608.6660492592088" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="193.97048191269226" cy="610.7995967971386" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="156.3985535377423" cy="615.2935646997478" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="471.1071419667566" cy="610.2751025252131" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="477.07059338905964" cy="611.0886107596402" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="421.0840512815034" cy="611.1430137171683" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="241.6999374355212" cy="609.1072813479201" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="168.01963836069197" cy="617.8977868699881" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="376.87150300772504" cy="613.0504977895196" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="289.95365242404705" cy="607.8098865733657" r="5" fill="#ff7f0e" stroke="none" opacity="0.85"/>
+<circle cx="262.2989656085316" cy="95.30893918231482" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="583.4515766367379" cy="90.9628761856037" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="186.8711349813791" cy="91.4970830460004" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="939.8824808774697" cy="93.3343635929266" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="379.99521565750285" cy="94.90554155530742" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="727.470020692578" cy="96.43728042957946" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="425.54025673992766" cy="95.03803890186964" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="604.8806822971017" cy="93.39926010094655" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="627.7951897769403" cy="96.75052972741776" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="316.3632230085323" cy="94.82563969080127" r="5" fill="#2ca02c" stroke="none" opacity="0.85"/>
+<circle cx="949.7341900036922" cy="673.1389520777298" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="807.0045504676901" cy="673.4158584982666" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="927.6497600112069" cy="672.4468453753839" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="894.8616992607421" cy="676.2265497508477" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="676.922670541628" cy="674.2729638870704" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="914.7180265240148" cy="672.0294502418851" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="303.0382949220675" cy="670.2157049497035" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="381.93934450946244" cy="675.1667742713443" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="271.29875310299633" cy="678.4094526369644" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<circle cx="476.87399608942326" cy="672.0825549219633" r="5" fill="#d62728" stroke="none" opacity="0.85"/>
+<rect x="1030" y="100" width="16" height="16" rx="0" fill="#1f77b4" stroke="#1f77b4" stroke-width="1" opacity="1.0"/>
+<text x="1054" y="112" font-size="12" text-anchor="start" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">小号铁钉</text>
+<rect x="1030" y="132" width="16" height="16" rx="0" fill="#ff7f0e" stroke="#ff7f0e" stroke-width="1" opacity="1.0"/>
+<text x="1054" y="144" font-size="12" text-anchor="start" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">小号铁夹</text>
+<rect x="1030" y="164" width="16" height="16" rx="0" fill="#2ca02c" stroke="#2ca02c" stroke-width="1" opacity="1.0"/>
+<text x="1054" y="176" font-size="12" text-anchor="start" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">普通钢筋</text>
+<rect x="1030" y="196" width="16" height="16" rx="0" fill="#d62728" stroke="#d62728" stroke-width="1" opacity="1.0"/>
+<text x="1054" y="208" font-size="12" text-anchor="start" fill="#111" font-family="SimSun, Microsoft YaHei, Arial" font-weight="normal">锈蚀钢筋</text>
+</svg>
