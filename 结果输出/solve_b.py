@@ -260,6 +260,10 @@ def normal_p_value(t_value: float) -> float:
     return max(0.0, min(1.0, 2 * (1 - 0.5 * (1 + math.erf(abs(t_value) / math.sqrt(2))))))
 
 
+def normal_cdf(z: float) -> float:
+    return 0.5 * (1 + math.erf(z / math.sqrt(2)))
+
+
 def percentile(values, q: float) -> float:
     if not values:
         return float("nan")
@@ -433,10 +437,11 @@ def open_output_text(path: Path, encoding="utf-8-sig", newline=""):
 
 def main():
     base = find_base_dir()
-    out = base / "B题_solution_outputs"
+    out = base / "结果输出"
     out.mkdir(exist_ok=True)
-    csv_path = next(p for p in base.iterdir() if p.suffix.lower() == ".csv")
-    xlsx_path = next(p for p in base.iterdir() if p.suffix.lower() == ".xlsx")
+    data_dir = base / "原始数据"
+    csv_path = next(p for p in data_dir.iterdir() if p.suffix.lower() == ".csv")
+    xlsx_path = next(p for p in data_dir.iterdir() if p.suffix.lower() == ".xlsx")
 
     observations, types_order = read_experiment(csv_path)
     nail, clip, ordinary, rusty = types_order
@@ -632,6 +637,10 @@ def main():
 
     def theta_static(sample_type: str) -> float:
         return theta0_by_type[sample_type]
+
+    def theta_margin(sample_type: str, day: int, use_mean: bool = False) -> float:
+        base = initial_stats[sample_type]["mean"] if use_mean else theta0_by_type[sample_type]
+        return round(base - theta_obs(sample_type, day, use_mean=use_mean), 6)
 
     threshold_profile_by_type = {}
     for sample_type in types_order:
@@ -1272,6 +1281,10 @@ def main():
         f"{clip}预测剩磁均值(mT)",
         f"{ordinary}预测剩磁均值(mT)",
         f"{rusty}预测剩磁均值(mT)",
+        f"{nail}阈值裕度(mT)",
+        f"{clip}阈值裕度(mT)",
+        f"{ordinary}阈值裕度(mT)",
+        f"{rusty}阈值裕度(mT)",
     ]
     threshold_rows = []
     for day in range(1, 91):
@@ -1289,6 +1302,8 @@ def main():
             row.append(threshold_profile_by_type[sample_type][day - 1])
         for sample_type in types_order:
             row.append(theta_obs(sample_type, day, use_mean=True))
+        for sample_type in types_order:
+            row.append(theta_margin(sample_type, day, use_mean=False))
         threshold_rows.append(row)
     threshold_xlsx = out / "问题3_动态阈值修正表.xlsx"
     write_simple_xlsx(threshold_xlsx, threshold_headers, threshold_rows)
@@ -1308,6 +1323,8 @@ def main():
             row.append(threshold_profile_by_type[sample_type][day - 1])
         for sample_type in types_order:
             row.append(theta_obs(sample_type, day, use_mean=True))
+        for sample_type in types_order:
+            row.append(round(theta_static(sample_type) - threshold_profile_by_type[sample_type][day - 1], 6))
         problem3_key_rows.append(row)
     write_csv(
         problem3_key_path,
@@ -1324,6 +1341,10 @@ def main():
             f"{clip}类型均值预测剩磁(mT)",
             f"{ordinary}类型均值预测剩磁(mT)",
             f"{rusty}类型均值预测剩磁(mT)",
+            f"{nail}阈值裕度(mT)",
+            f"{clip}阈值裕度(mT)",
+            f"{ordinary}阈值裕度(mT)",
+            f"{rusty}阈值裕度(mT)",
         ],
         problem3_key_rows,
     )
@@ -1337,6 +1358,8 @@ def main():
             row.append(theta_static(sample_type))
         for sample_type in types_order:
             row.append(threshold_profile_by_type[sample_type][day - 1])
+        for sample_type in types_order:
+            row.append(round(theta_static(sample_type) - threshold_profile_by_type[sample_type][day - 1], 6))
         problem3_static_rows.append(row)
     write_csv(
         problem3_static_path,
@@ -1353,6 +1376,10 @@ def main():
             f"{clip}映射阈值(mT)",
             f"{ordinary}映射阈值(mT)",
             f"{rusty}映射阈值(mT)",
+            f"{nail}映射裕度(mT)",
+            f"{clip}映射裕度(mT)",
+            f"{ordinary}映射裕度(mT)",
+            f"{rusty}映射裕度(mT)",
         ],
         problem3_static_rows,
     )
@@ -1385,7 +1412,7 @@ def main():
     cluster_keys_problem3 = list(cluster_rows_problem3.keys())
     rng_problem3 = random.Random(20260513)
     boot_theta_map = {(day, sample_type): [] for day in key_days for sample_type in types_order}
-    bootstrap_reps_problem3 = 200
+    bootstrap_reps_problem3 = 1000
     for _ in range(bootstrap_reps_problem3):
         sampled_keys = [rng_problem3.choice(cluster_keys_problem3) for _ in cluster_keys_problem3]
         boot_rows = []
@@ -1507,14 +1534,30 @@ def main():
     write_csv(problem2_main_path, ["变量", "系数", "聚类稳健标准误", "t值", "近似p值", "含义"], problem2_main_rows)
 
     # Problem 4: cluster bootstrap and three-region decision table.
+    problem4_relative_width_threshold = 1.0
+    problem4_min_retention_ratio = 0.05
+    problem4_support_prob_accept = 0.975
+    problem4_support_prob_reject = 0.025
+    problem4_calibration_floor_ratio = 0.40
+
     cluster_rows = {}
     for row in observations:
         if row["day"] == 0:
             continue
         cluster_rows.setdefault((row["type"], row["id"]), []).append(row)
 
+    problem4_out = out / "问题四"
+    problem4_out.mkdir(exist_ok=True)
+
     target_rows = [row for row in observations if row["day"] > 0]
     target_boot_values = [[] for _ in target_rows]
+    retention_boot_map = {
+        (sample_type, day): []
+        for sample_type in types_order
+        for day in range(1, 91)
+    }
+    decision_records = []
+    decision_records_ascii = []
     cluster_keys = list(cluster_rows.keys())
     rng = random.Random(20260513)
     bootstrap_reps = 1000
@@ -1542,6 +1585,10 @@ def main():
         def boot_survival(sample_type: str, day: int) -> float:
             return math.exp(-boot_predict_log_decay(sample_type, day))
 
+        for sample_type in types_order:
+            for day in range(1, 91):
+                retention_boot_map[(sample_type, day)].append(boot_survival(sample_type, day))
+
         for idx, row in enumerate(target_rows):
             m0_hat_boot = row["mag"] / boot_survival(row["type"], row["day"])
             target_boot_values[idx].append(m0_hat_boot)
@@ -1561,8 +1608,11 @@ def main():
                 "反推初值下界(mT)",
                 "反推初值上界(mT)",
                 "区间相对宽度",
+                "反推初值裕度(mT)",
+                "校准Z值",
+                "Bootstrap支持率",
+                "校准支持概率",
                 "三区域判定",
-                "辅助概率",
                 "高风险提示",
             ]
         )
@@ -1572,28 +1622,81 @@ def main():
             m0_hat = row["mag"] / r_hat
             theta0 = 1.0 if row["type"] in (nail, clip) else 1.5
             if boot_vals:
+                boot_mean, boot_sd = mean_sd(boot_vals) if len(boot_vals) > 1 else (boot_vals[0], 0.0)
                 lower = percentile(boot_vals, 0.025)
                 upper = percentile(boot_vals, 0.975)
                 relative_width = (upper - lower) / m0_hat if m0_hat else float("inf")
-                support_prob = sum(1 for v in boot_vals if v >= theta0) / len(boot_vals)
+                boot_support = (sum(1 for v in boot_vals if v >= theta0) + 0.5) / (len(boot_vals) + 1.0)
+                support_gap = m0_hat - theta0
+                model_sd = abs(m0_hat * metrics["sigma_log"])
+                calibration_floor = problem4_calibration_floor_ratio * theta0
+                combined_sd = math.sqrt(boot_sd**2 + model_sd**2 + calibration_floor**2)
+                support_z = support_gap / combined_sd if combined_sd > 0 else float("inf")
+                support_prob = normal_cdf(support_z)
             else:
                 lower = upper = float("nan")
                 relative_width = float("nan")
+                boot_sd = float("nan")
+                boot_support = float("nan")
+                support_gap = float("nan")
+                support_z = float("nan")
                 support_prob = float("nan")
             gray_zone = (
                 math.isnan(relative_width)
-                or relative_width > 1.0
-                or r_hat < 0.05
+                or relative_width > problem4_relative_width_threshold
+                or r_hat < problem4_min_retention_ratio
             )
             if gray_zone:
                 decision = "灰区/证据不足"
-            elif lower >= theta0:
+            elif lower >= theta0 and support_prob >= problem4_support_prob_accept:
                 decision = "支持曾遭雷击"
-            elif upper < theta0:
+            elif upper < theta0 and support_prob <= problem4_support_prob_reject:
                 decision = "不支持曾遭雷击"
             else:
                 decision = "灰区/证据不足"
-            warning_flag = "是" if (not math.isnan(relative_width) and (relative_width > 1.0 or r_hat < 0.05)) else "否"
+            warning_flag = "是" if (not math.isnan(relative_width) and (relative_width > problem4_relative_width_threshold or r_hat < problem4_min_retention_ratio)) else "否"
+            decision_records.append(
+                {
+                    "样品类型": row["type"],
+                    "样品编号": row["id"],
+                    "测量天数": row["day"],
+                    "观测剩磁(mT)": row["mag"],
+                    "保留率R": r_hat,
+                    "动态阈值(mT)": theta_t,
+                    "反推初值点估计(mT)": m0_hat,
+                    "反推初值下界(mT)": lower,
+                    "反推初值上界(mT)": upper,
+                    "区间相对宽度": relative_width,
+                    "Bootstrap标准差(mT)": boot_sd,
+                    "反推初值裕度(mT)": support_gap,
+                    "校准Z值": support_z,
+                    "Bootstrap支持率": boot_support,
+                    "校准支持概率": support_prob,
+                    "三区域判定": decision,
+                    "高风险提示": warning_flag,
+                }
+            )
+            decision_records_ascii.append(
+                {
+                    "sample_type": row["type"],
+                    "sample_id": row["id"],
+                    "delay_days": row["day"],
+                    "observed_magnetism_mt": row["mag"],
+                    "retention_ratio": r_hat,
+                    "dynamic_threshold_mt": theta_t,
+                    "m0_hat_mt": m0_hat,
+                    "m0_hat_lower_mt": lower,
+                    "m0_hat_upper_mt": upper,
+                    "relative_width": relative_width,
+                    "bootstrap_sd_mt": boot_sd,
+                    "support_gap_mt": support_gap,
+                    "support_z": support_z,
+                    "bootstrap_support_rate": boot_support,
+                    "support_probability": support_prob,
+                    "decision": decision,
+                    "warning_flag": warning_flag,
+                }
+            )
             writer.writerow(
                 [
                     row["type"],
@@ -1606,11 +1709,289 @@ def main():
                     round(lower, 6) if not math.isnan(lower) else "",
                     round(upper, 6) if not math.isnan(upper) else "",
                     round(relative_width, 6) if not math.isnan(relative_width) else "",
-                    decision,
+                    round(support_gap, 6) if not math.isnan(support_gap) else "",
+                    round(support_z, 6) if not math.isnan(support_z) else "",
+                    round(boot_support, 6) if not math.isnan(boot_support) else "",
                     round(support_prob, 6) if not math.isnan(support_prob) else "",
+                    decision,
                     warning_flag,
                 ]
             )
+
+    problem4_sens_path = out / "问题4_判定敏感性.csv"
+    problem4_sens_rows = []
+    problem4_stability_path = out / "问题4_判定稳定性.csv"
+    sensitivity_levels = [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15]
+    stability_bucket = {sample_type: {"support": 0, "gray": 0, "reject": 0, "prob": []} for sample_type in types_order}
+    for multiplier in sensitivity_levels:
+        for sample_type in types_order:
+            subset = [r for r in decision_records if r["样品类型"] == sample_type]
+            support = gray = reject = 0
+            prob_values = []
+            for rec in subset:
+                theta_scaled = rec["动态阈值(mT)"] * multiplier
+                boot_sd = rec["Bootstrap标准差(mT)"]
+                if math.isnan(boot_sd):
+                    boot_sd = 0.0
+                calibration_sd = math.sqrt(
+                    boot_sd**2
+                    + (rec["反推初值点估计(mT)"] * metrics["sigma_log"]) ** 2
+                    + (problem4_calibration_floor_ratio * (1.0 if sample_type in (nail, clip) else 1.5)) ** 2
+                )
+                support_prob_scaled = normal_cdf(
+                    (rec["反推初值点估计(mT)"] - theta_scaled) / max(1e-12, calibration_sd)
+                )
+                if (
+                    math.isnan(rec["区间相对宽度"])
+                    or rec["区间相对宽度"] > problem4_relative_width_threshold
+                    or rec["保留率R"] < problem4_min_retention_ratio
+                ):
+                    gray += 1
+                elif rec["反推初值下界(mT)"] >= theta_scaled and support_prob_scaled >= problem4_support_prob_accept:
+                    support += 1
+                elif rec["反推初值上界(mT)"] < theta_scaled and support_prob_scaled <= problem4_support_prob_reject:
+                    reject += 1
+                else:
+                    gray += 1
+                prob_values.append(support_prob_scaled)
+                if support_prob_scaled >= problem4_support_prob_accept and rec["反推初值下界(mT)"] >= theta_scaled:
+                    stability_bucket[sample_type]["support"] += 1
+                elif support_prob_scaled <= problem4_support_prob_reject and rec["反推初值上界(mT)"] < theta_scaled:
+                    stability_bucket[sample_type]["reject"] += 1
+                else:
+                    stability_bucket[sample_type]["gray"] += 1
+                stability_bucket[sample_type]["prob"].append(support_prob_scaled)
+            problem4_sens_rows.append(
+                [
+                    multiplier,
+                    sample_type,
+                    support,
+                    gray,
+                    reject,
+                    round(sum(prob_values) / len(prob_values), 6) if prob_values else "",
+                ]
+            )
+    write_csv(
+        problem4_sens_path,
+        ["阈值倍数", "样品类型", "支持数", "灰区数", "不支持数", "平均校准支持概率"],
+        problem4_sens_rows,
+    )
+    problem4_stability_rows = []
+    for sample_type in types_order:
+        bucket = stability_bucket[sample_type]
+        total = bucket["support"] + bucket["gray"] + bucket["reject"]
+        support_rate = bucket["support"] / total if total else float("nan")
+        gray_rate = bucket["gray"] / total if total else float("nan")
+        reject_rate = bucket["reject"] / total if total else float("nan")
+        mean_prob = sum(bucket["prob"]) / len(bucket["prob"]) if bucket["prob"] else float("nan")
+        problem4_stability_rows.append(
+            [
+                sample_type,
+                total,
+                bucket["support"],
+                bucket["gray"],
+                bucket["reject"],
+                round(support_rate, 6) if not math.isnan(support_rate) else "",
+                round(gray_rate, 6) if not math.isnan(gray_rate) else "",
+                round(reject_rate, 6) if not math.isnan(reject_rate) else "",
+                round(mean_prob, 6) if not math.isnan(mean_prob) else "",
+            ]
+        )
+    write_csv(
+        problem4_stability_path,
+        ["样品类型", "总评估数", "支持数", "灰区数", "不支持数", "支持率", "灰区率", "不支持率", "平均校准支持概率"],
+        problem4_stability_rows,
+    )
+
+    q4_input_path = problem4_out / "q4_input_samples.csv"
+    q4_retention_path = problem4_out / "q4_retention_prediction.csv"
+    q4_threshold_path = problem4_out / "q4_dynamic_threshold_1_90days.csv"
+    q4_backcast_path = problem4_out / "q4_backcast_initial_value.csv"
+    q4_bootstrap_path = problem4_out / "q4_bootstrap_intervals.csv"
+    q4_decision_path = problem4_out / "q4_three_zone_decision.csv"
+    q4_failure_path = problem4_out / "q4_delay_failure_flags.csv"
+    q4_case_template_path = problem4_out / "q4_case_info_template.csv"
+    q4_sample_template_path = problem4_out / "q4_sample_info_template.csv"
+    q4_weather_template_path = problem4_out / "q4_weather_series_template.csv"
+
+    def failure_reason(r_hat, relative_width):
+        reasons = []
+        if r_hat < problem4_min_retention_ratio:
+            reasons.append("retention_too_low")
+        if math.isnan(relative_width):
+            reasons.append("interval_missing")
+        elif relative_width > problem4_relative_width_threshold:
+            reasons.append("interval_too_wide")
+        return ";".join(reasons) if reasons else "none"
+
+    def recheck_advice(decision, warning_flag, r_hat, relative_width):
+        if r_hat < problem4_min_retention_ratio:
+            return "delay_too_long_add_other_evidence"
+        if (not math.isnan(relative_width)) and relative_width > problem4_relative_width_threshold:
+            return "repeat_measurement_or_add_samples"
+        return "recheck_with_site_evidence"
+
+    q4_input_rows = []
+    for row in target_rows:
+        weather_day = weather[row["day"]]
+        q4_input_rows.append(
+            [
+                "EXPERIMENT_INTERNAL",
+                row["type"],
+                row["id"],
+                row["day"],
+                round(row["mag"], 6),
+                weather_day["weather"],
+                round(weather_day["temp"], 6),
+                round(weather_day["hum"], 6),
+                "附件2/内置天气轨迹",
+            ]
+        )
+    write_csv(
+        q4_input_path,
+        ["case_id", "sample_type", "sample_id", "delay_days", "observed_magnetism_mt", "weather", "temp_c", "hum_pct", "weather_source"],
+        q4_input_rows,
+    )
+
+    q4_retention_rows = []
+    q4_threshold_rows = []
+    for sample_type in types_order:
+        theta0 = theta_static(sample_type)
+        for day in range(1, 91):
+            weather_day = weather[day]
+            point = survival_cache[(sample_type, day)]
+            boot_vals = retention_boot_map[(sample_type, day)]
+            lower = percentile(boot_vals, 0.025) if boot_vals else float("nan")
+            upper = percentile(boot_vals, 0.975) if boot_vals else float("nan")
+            q4_retention_rows.append(
+                [
+                    day,
+                    weather_day["weather"],
+                    round(weather_day["temp"], 6),
+                    round(weather_day["hum"], 6),
+                    sample_type,
+                    round(point, 6),
+                    round(lower, 6) if not math.isnan(lower) else "",
+                    round(upper, 6) if not math.isnan(upper) else "",
+                    len(boot_vals),
+                ]
+            )
+            q4_threshold_rows.append(
+                [
+                    day,
+                    weather_day["weather"],
+                    round(weather_day["temp"], 6),
+                    round(weather_day["hum"], 6),
+                    sample_type,
+                    round(theta0, 6),
+                    round(theta0 * point, 6),
+                    round(theta0 * lower, 6) if not math.isnan(lower) else "",
+                    round(theta0 * upper, 6) if not math.isnan(upper) else "",
+                ]
+            )
+    write_csv(
+        q4_retention_path,
+        ["day", "weather", "temp_c", "hum_pct", "sample_type", "retention_ratio", "retention_lower", "retention_upper", "bootstrap_reps"],
+        q4_retention_rows,
+    )
+    write_csv(
+        q4_threshold_path,
+        ["day", "weather", "temp_c", "hum_pct", "sample_type", "theta_static_mt", "theta_dynamic_mt", "theta_dynamic_lower_mt", "theta_dynamic_upper_mt"],
+        q4_threshold_rows,
+    )
+
+    q4_backcast_rows = []
+    q4_bootstrap_rows = []
+    q4_decision_rows = []
+    q4_failure_rows = []
+    for rec in decision_records_ascii:
+        reason = failure_reason(rec["retention_ratio"], rec["relative_width"])
+        advice = recheck_advice(rec["decision"], rec["warning_flag"], rec["retention_ratio"], rec["relative_width"])
+        q4_backcast_rows.append(
+            [
+                rec["sample_type"],
+                rec["sample_id"],
+                rec["delay_days"],
+                round(rec["observed_magnetism_mt"], 6),
+                round(rec["retention_ratio"], 6),
+                round(rec["dynamic_threshold_mt"], 6),
+                round(rec["m0_hat_mt"], 6),
+                round(theta_static(rec["sample_type"]), 6),
+                round(rec["support_gap_mt"], 6) if not math.isnan(rec["support_gap_mt"]) else "",
+            ]
+        )
+        q4_bootstrap_rows.append(
+            [
+                rec["sample_type"],
+                rec["sample_id"],
+                rec["delay_days"],
+                round(rec["m0_hat_mt"], 6),
+                round(rec["m0_hat_lower_mt"], 6) if not math.isnan(rec["m0_hat_lower_mt"]) else "",
+                round(rec["m0_hat_upper_mt"], 6) if not math.isnan(rec["m0_hat_upper_mt"]) else "",
+                round(rec["bootstrap_sd_mt"], 6) if not math.isnan(rec["bootstrap_sd_mt"]) else "",
+                round(rec["bootstrap_support_rate"], 6) if not math.isnan(rec["bootstrap_support_rate"]) else "",
+                round(rec["support_probability"], 6) if not math.isnan(rec["support_probability"]) else "",
+                round(rec["relative_width"], 6) if not math.isnan(rec["relative_width"]) else "",
+            ]
+        )
+        q4_decision_rows.append(
+            [
+                rec["sample_type"],
+                rec["sample_id"],
+                rec["delay_days"],
+                rec["decision"],
+                rec["warning_flag"],
+                round(rec["support_probability"], 6) if not math.isnan(rec["support_probability"]) else "",
+                advice,
+            ]
+        )
+        q4_failure_rows.append(
+            [
+                rec["sample_type"],
+                rec["sample_id"],
+                rec["delay_days"],
+                round(rec["retention_ratio"], 6),
+                round(rec["relative_width"], 6) if not math.isnan(rec["relative_width"]) else "",
+                "yes" if reason != "none" else "no",
+                reason,
+            ]
+        )
+    write_csv(
+        q4_backcast_path,
+        ["sample_type", "sample_id", "delay_days", "observed_magnetism_mt", "retention_ratio", "dynamic_threshold_mt", "m0_hat_mt", "static_threshold_mt", "support_gap_mt"],
+        q4_backcast_rows,
+    )
+    write_csv(
+        q4_bootstrap_path,
+        ["sample_type", "sample_id", "delay_days", "m0_hat_mt", "m0_hat_lower_mt", "m0_hat_upper_mt", "bootstrap_sd_mt", "bootstrap_support_rate", "support_probability", "relative_width"],
+        q4_bootstrap_rows,
+    )
+    write_csv(
+        q4_decision_path,
+        ["sample_type", "sample_id", "delay_days", "decision", "warning_flag", "support_probability", "recheck_advice"],
+        q4_decision_rows,
+    )
+    write_csv(
+        q4_failure_path,
+        ["sample_type", "sample_id", "delay_days", "retention_ratio", "relative_width", "is_failure", "failure_reason"],
+        q4_failure_rows,
+    )
+
+    write_csv(
+        q4_case_template_path,
+        ["case_id", "lightning_date", "measurement_date", "sampling_date", "site_name", "site_lon", "site_lat", "weather_source"],
+        [["CASE-001", "2026-07-10", "2026-07-25", "2026-07-25", "某工程构件", "", "", "JMA/现场气象站"]],
+    )
+    write_csv(
+        q4_sample_template_path,
+        ["sample_id", "sample_type", "rust_level", "observed_magnetism_mt", "measurement_unit", "replicate_count", "replicate_mean_mt", "replicate_sd_mt", "instrument_model", "instrument_error_mt", "component_position"],
+        [["S-01", ordinary, "", 0.92, "mT", 3, 0.91, 0.03, "", "", ""]],
+    )
+    write_csv(
+        q4_weather_template_path,
+        ["date", "day_index", "temp_c", "hum_pct", "weather_text", "station_id", "is_imputed"],
+        [["2026-07-11", 1, 31.2, 78.0, "阵雨", "STATION-001", "false"]],
+    )
 
     # Main report.
     try:
@@ -1730,14 +2111,16 @@ def main():
             "流程为：1）输入样品类型、锈蚀等级、检测延迟天数、实测剩磁及天气信息；"
             "2）进行缺失值和异常值处理，统一单位并匹配天气序列；"
             "3）调用衰减模型计算当前剩磁预测和动态阈值；"
-            "4）将实测剩磁与动态阈值比较；"
-            "5）根据对数尺度误差输出置信水平。"
+            "4）将实测剩磁与动态阈值比较，并结合反推初值区间进行三区域判定；"
+            "5）输出校准支持概率、Bootstrap支持率与阈值敏感性结果。"
         )
         doc.add_paragraph(
-            f"置信度可取 Z=[ln(Mobs)-ln(θs(t))]/{metrics['sigma_log']:.4f}，P=Φ(Z)。"
-            "建议等级为：P≥0.90高度支持雷击，0.70≤P<0.90较支持雷击，"
-            "0.40≤P<0.70证据不足，P<0.40不支持雷击。"
+            f"校准支持概率可写为 P=Φ((M0_hat-θ0)/σ_total)，其中 σ_total 由 Bootstrap 波动、"
+            f"模型残差和保守校准下限共同构成。"
+            "建议将 P≥0.975 视为强支持，0.90≤P<0.975 视为支持，"
+            "P<0.90 或区间过宽时进入灰区。"
         )
+        doc.add_paragraph("同时已补充阈值敏感性分析表，用于检查国标阈值上下浮动 10% 时判定是否稳定。")
 
         report_path = out / "B题_完整求解报告.docx"
         doc.save(report_path)
@@ -1769,11 +2152,13 @@ def main():
             f.write(f"- 问题2岭回归稳健性：{problem2_ridge_path.name}\n")
             f.write(f"- 问题2收缩模型对比：{problem2_shrink_path.name}\n")
             f.write(f"- 问题4三区域判定：{problem4_path.name}\n\n")
+            f.write(f"- 问题4判定敏感性：{problem4_sens_path.name}\n")
+            f.write(f"- 问题4判定稳定性：{problem4_stability_path.name}\n\n")
             f.write("## 当前模型口径\n")
             f.write("- 个体初值锚定 + 类型共享衰减函数\n")
             f.write("- 动态阈值映射：Theta_s(t)=Theta_s^{GB}·R_s(t)\n")
             f.write("- 反推初值：M0_hat = Mobs / R_s(t)\n")
-            f.write("- 问题4：Bootstrap区间 + 三区域判定\n")
+            f.write("- 问题4：Bootstrap区间 + 三区域判定 + 阈值敏感性分析 + 稳定性汇总\n")
         print(f"Report generation fallback to markdown: {exc}")
 
     print("Generated outputs:")
@@ -1787,7 +2172,9 @@ def main():
     problem2_rusty_2290_path = out / "问题2_锈蚀钢筋_22_90天汇总.csv"
     problem2_window_path = out / "问题2_高风险窗口对比.csv"
     problem4_path = out / "问题4_三区域判定结果.csv"
-    for path in [pred_path, problem1_path, problem1_cv_path, threshold_xlsx, problem3_key_path, problem3_static_path, problem3_mono_path, problem3_boot_path, params_path, problem2_main_path, problem2_summary_path, problem2_detail_path, problem2_cv_path, problem2_rusty_path, problem2_rusty_2290_path, problem2_window_path, problem2_collinearity_path, problem2_vif_path, problem2_ridge_path, problem2_shrink_path, problem4_path, report_path]:
+    problem4_sens_path = out / "问题4_判定敏感性.csv"
+    problem4_stability_path = out / "问题4_判定稳定性.csv"
+    for path in [pred_path, problem1_path, problem1_cv_path, threshold_xlsx, problem3_key_path, problem3_static_path, problem3_mono_path, problem3_boot_path, params_path, problem2_main_path, problem2_summary_path, problem2_detail_path, problem2_cv_path, problem2_rusty_path, problem2_rusty_2290_path, problem2_window_path, problem2_collinearity_path, problem2_vif_path, problem2_ridge_path, problem2_shrink_path, problem4_path, problem4_sens_path, problem4_stability_path, report_path]:
         if path:
             print(path)
 

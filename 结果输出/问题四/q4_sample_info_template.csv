@@ -1,0 +1,2 @@
+﻿sample_id,sample_type,rust_level,observed_magnetism_mt,measurement_unit,replicate_count,replicate_mean_mt,replicate_sd_mt,instrument_model,instrument_error_mt,component_position
+S-01,普通钢筋,,0.92,mT,3,0.91,0.03,,,

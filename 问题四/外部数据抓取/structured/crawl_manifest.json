@@ -1,0 +1,43 @@
+{
+  "rebuilt_at": "2026-05-14T12:54:04",
+  "note": "rebuilt from current structured outputs after supplemental data collection",
+  "files": {
+    "articles_full": "D:\\CQUPT\\self_file\\competition\\gjsschool2026\\B题\\赛题主要文件夹\\问题四\\外部数据抓取\\structured\\articles_crossref.csv",
+    "weather_full": "D:\\CQUPT\\self_file\\competition\\gjsschool2026\\B题\\赛题主要文件夹\\问题四\\外部数据抓取\\structured\\weather_jma_daily.csv",
+    "articles_supplement": "D:\\CQUPT\\self_file\\competition\\gjsschool2026\\B题\\赛题主要文件夹\\问题四\\外部数据抓取\\structured\\articles_crossref_supplement.csv"
+  },
+  "counts": {
+    "articles_full_rows": 73,
+    "articles_full_pdf_paths": 18,
+    "weather_full_rows": 1462,
+    "articles_supplement_rows": 47
+  },
+  "weather_tag_counts": {
+    "jma_0402_48": 731,
+    "jma_47638_49": 731
+  },
+  "article_sample_titles": [
+    "Just a moment...",
+    "Just a moment...",
+    "Anomalous remanent magnetization of basalt",
+    "Just a moment...",
+    "Just a moment...",
+    "Just a moment...",
+    "Just a moment...",
+    "Measurement of the remanent magnetization of igneous rocks",
+    "Just a moment...",
+    "Investigating if Lightning-Induced Remanent Magnetization can Explain the Martian Magnetic Anomalies"
+  ],
+  "supplement_sample_titles": [
+    "Magnetization, Isothermal Remanent",
+    "Drilling-induced isothermal remanent magnetization",
+    "Magnetization, Isothermal Remanent",
+    "A geomagnetic total intensity anomaly originated from lightning-induced isothermal remanent magnetization: case of the Yatsugatake Magnetic Observatory, central Japan",
+    "isothermal remanent magnetization",
+    "Insights on lightning-induced remanent magnetization from high-current impulse experiments",
+    "6.2.3.2.4 Isothermal remanent magnetization IRM",
+    "Lightning-induced remanent magnetization—the Vredefort impact structure, South Africa",
+    "The Effect of Measuring Magnetic Susceptibility of Water Samples by Starting with Isothermal Remanent Magnetization (IRM) before Anhysteretic Remanent Magnetization (ARM)",
+    "Insights on lightning-induced remanent magnetization from high-current impulse experiments"
+  ]
+}

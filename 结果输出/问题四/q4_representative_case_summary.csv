@@ -1,0 +1,5 @@
+﻿target_decision,case_count,target_hit_count,target_hit_rate
+支持曾遭雷击,16,16,1.0
+灰区/证据不足,24,24,1.0
+不支持曾遭雷击,16,16,1.0
+overall,56,56,1.0
